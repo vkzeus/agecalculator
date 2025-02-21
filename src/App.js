@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 
 const AgeCalculator = () => {
@@ -9,7 +9,7 @@ const AgeCalculator = () => {
   const [errors, setErrors] = useState({ day: "", month: "", year: "" });
 
   const validateInputs = () => {
-    let errors = { day: "", month: "", year: "" };
+    let newErrors = { day: "", month: "", year: "" };
     let isValid = true;
     const today = new Date();
     const inputYear = parseInt(year, 10);
@@ -17,43 +17,46 @@ const AgeCalculator = () => {
     const inputDay = parseInt(day, 10);
 
     if (!day) {
-      errors.day = "This field is required";
+      newErrors.day = "This field is required";
       isValid = false;
-    } else if (inputDay < 1 || inputDay > 31) {
-      errors.day = "Must be a valid day";
+    } else if (isNaN(inputDay) || inputDay < 1 || inputDay > 31) {
+      newErrors.day = "Must be a valid day";
       isValid = false;
     }
 
     if (!month) {
-      errors.month = "This field is required";
+      newErrors.month = "This field is required";
       isValid = false;
-    } else if (inputMonth < 1 || inputMonth > 12) {
-      errors.month = "Must be a valid month";
+    } else if (isNaN(inputMonth) || inputMonth < 1 || inputMonth > 12) {
+      newErrors.month = "Must be a valid month";
       isValid = false;
     }
 
     if (!year) {
-      errors.year = "This field is required";
+      newErrors.year = "This field is required";
       isValid = false;
-    } else if (inputYear > today.getFullYear()) {
-      errors.year = "Must be in past";
+    } else if (isNaN(inputYear) || inputYear > today.getFullYear()) {
+      newErrors.year = "Must be in past";
       isValid = false;
     }
 
     if (isValid && inputMonth && inputDay) {
       const validDaysInMonth = new Date(inputYear, inputMonth, 0).getDate();
       if (inputDay > validDaysInMonth) {
-        errors.day = "Must be a valid day";
+        newErrors.day = "Must be a valid day";
         isValid = false;
       }
     }
 
-    setErrors(errors);
+    setErrors(newErrors);
     return isValid;
   };
 
   const calculateAge = () => {
-    if (!validateInputs()) return;
+    if (!validateInputs()) {
+      setAge({ years: "--", months: "--", days: "--" });
+      return;
+    }
 
     const birthDate = new Date(`${year}-${month}-${day}`);
     const today = new Date();
@@ -82,34 +85,49 @@ const AgeCalculator = () => {
           <input
             id="dayIn"
             type="number"
+            min="1"
+            max="31"
             value={day}
             onChange={(e) => setDay(e.target.value)}
+            onBlur={validateInputs}
           />
-          {errors.day && <p className="error">{errors.day}</p>}
+          <p className="error">{errors.day}</p>
         </div>
+
         <div>
           <label>Month</label>
           <input
             id="monthIn"
             type="number"
+            min="1"
+            max="12"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
+            onBlur={validateInputs}
           />
-          {errors.month && <p className="error">{errors.month}</p>}
+          <p className="error">{errors.month}</p>
         </div>
+
         <div>
           <label>Year</label>
           <input
             id="yearIn"
             type="number"
+            min="1900"
+            max={new Date().getFullYear()}
             value={year}
             onChange={(e) => setYear(e.target.value)}
+            onBlur={validateInputs}
           />
-          {errors.year && <p className="error">{errors.year}</p>}
+          <p className="error">{errors.year}</p>
         </div>
       </div>
 
-      <button id="calculateBtn" onClick={calculateAge}>
+      <button
+        id="calculateBtn"
+        onClick={calculateAge}
+        disabled={!day || !month || !year}
+      >
         Calculate
       </button>
 
@@ -126,7 +144,11 @@ const AgeCalculator = () => {
       </div>
 
       <div className="attribution">
-        <a href="https://www.crio.do" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://www.crio.do"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Crio
         </a>
       </div>
